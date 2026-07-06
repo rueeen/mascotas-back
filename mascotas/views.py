@@ -21,14 +21,28 @@ class MascotaViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         estado = self.request.query_params.get('estado')
+        tipo_animal = self.request.query_params.get('tipo_animal')
         search = self.request.query_params.get('search')
 
         if estado:
             queryset = queryset.filter(estado=estado)
+        if tipo_animal:
+            queryset = queryset.filter(tipo_animal=tipo_animal)
         if search:
             queryset = queryset.filter(nombre__icontains=search)
 
         return queryset
+
+    def perform_create(self, serializer):
+        ip = self._get_client_ip(self.request)
+        serializer.save(ip_origen=ip)
+
+    @staticmethod
+    def _get_client_ip(request):
+        forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+        if forwarded:
+            return forwarded.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR')
 
     @action(detail=True, methods=['post'], url_path='comentar')
     def comentar(self, request, pk=None):
@@ -37,7 +51,8 @@ class MascotaViewSet(viewsets.ModelViewSet):
         data['mascota'] = mascota.pk
         serializer = ComentarioSerializer(data=data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(mascota=mascota)
+        ip = self._get_client_ip(request)
+        serializer.save(mascota=mascota, ip_origen=ip)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -54,3 +69,7 @@ class ComentarioViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(mascota_id=mascota_id)
 
         return queryset
+
+    def perform_create(self, serializer):
+        ip = MascotaViewSet._get_client_ip(self.request)
+        serializer.save(ip_origen=ip)
