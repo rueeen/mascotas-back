@@ -5,7 +5,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-change-me-in-production'
 DEBUG = True
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS abierto intencionalmente para fines educativos / testeo de estudiantes. Restringir en un entorno con datos reales.
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
