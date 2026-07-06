@@ -33,7 +33,9 @@ class MascotaViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='comentar')
     def comentar(self, request, pk=None):
         mascota = self.get_object()
-        serializer = ComentarioSerializer(data={**request.data, 'mascota': mascota.pk})
+        data = request.data.dict() if hasattr(request.data, 'dict') else dict(request.data)
+        data['mascota'] = mascota.pk
+        serializer = ComentarioSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save(mascota=mascota)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
