@@ -1,3 +1,4 @@
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -97,3 +98,69 @@ class MascotaQueryAndSerializerTests(TestCase):
         self.assertEqual(results[0]['sexo'], 'hembra')
         self.assertEqual(results[0]['tamano'], 'pequeno')
         self.assertNotIn('ip_origen', results[0])
+
+    @staticmethod
+    def _test_image(name='mascota.gif'):
+        return SimpleUploadedFile(
+            name,
+            b'GIF87a\x01\x00\x01\x00\x80\x01\x00\x00\x00\x00ccc,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;',
+            content_type='image/gif',
+        )
+
+    def test_create_saves_origin_ip_and_hides_it_in_response(self):
+        response = self.client.post(
+            '/api/mascotas/',
+            {
+                'nombre': 'Luna',
+                'descripcion': 'Gata perdida cerca de la escuela',
+                'imagen': self._test_image(),
+                'estado': Mascota.Estado.PERDIDA,
+            },
+            format='multipart',
+            REMOTE_ADDR='203.0.113.45',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        mascota = Mascota.objects.get(nombre='Luna')
+        self.assertEqual(mascota.ip_origen, '203.0.113.45')
+        self.assertNotIn('ip_origen', response.data)
+
+    def test_detail_hides_origin_ip(self):
+        mascota = Mascota.objects.get(nombre='Michi')
+
+        response = self.client.get(f'/api/mascotas/{mascota.pk}/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['nombre'], 'Michi')
+        self.assertNotIn('ip_origen', response.data)
+
+    def test_create_accepts_optional_detail_fields_and_saves_them(self):
+        response = self.client.post(
+            '/api/mascotas/',
+            {
+                'nombre': 'Toby',
+                'descripcion': 'Perro en adopción',
+                'imagen': self._test_image('toby.gif'),
+                'estado': Mascota.Estado.EN_ADOPCION,
+                'tipo_animal': Mascota.TipoAnimal.PERRO,
+                'edad': 4,
+                'raza': 'Labrador',
+                'sexo': Mascota.Sexo.MACHO,
+                'tamano': Mascota.Tamano.GRANDE,
+            },
+            format='multipart',
+            REMOTE_ADDR='198.51.100.77',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        mascota = Mascota.objects.get(nombre='Toby')
+        self.assertEqual(mascota.tipo_animal, Mascota.TipoAnimal.PERRO)
+        self.assertEqual(mascota.edad, 4)
+        self.assertEqual(mascota.raza, 'Labrador')
+        self.assertEqual(mascota.sexo, Mascota.Sexo.MACHO)
+        self.assertEqual(mascota.tamano, Mascota.Tamano.GRANDE)
+        self.assertEqual(response.data['edad'], 4)
+        self.assertEqual(response.data['raza'], 'Labrador')
+        self.assertEqual(response.data['sexo'], 'macho')
+        self.assertEqual(response.data['tamano'], 'grande')
+        self.assertNotIn('ip_origen', response.data)
