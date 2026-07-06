@@ -6,7 +6,13 @@ from .models import Comentario, Mascota
 class ComentarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comentario
-        fields = '__all__'
+        fields = [
+            'id',
+            'mascota',
+            'autor',
+            'contenido',
+            'fecha_creacion',
+        ]
 
 
 class MascotaSerializer(serializers.ModelSerializer):
@@ -14,7 +20,21 @@ class MascotaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mascota
-        fields = '__all__'
+        fields = [
+            'id',
+            'nombre',
+            'descripcion',
+            'imagen',
+            'estado',
+            'tipo_animal',
+            'edad',
+            'raza',
+            'sexo',
+            'tamano',
+            'fecha_creacion',
+            'fecha_actualizacion',
+            'comentarios',
+        ]
 
 
 class MascotaListSerializer(serializers.ModelSerializer):
@@ -26,6 +46,11 @@ class MascotaListSerializer(serializers.ModelSerializer):
             'descripcion',
             'imagen',
             'estado',
+            'tipo_animal',
+            'edad',
+            'raza',
+            'sexo',
+            'tamano',
             'fecha_creacion',
             'fecha_actualizacion',
         ]
