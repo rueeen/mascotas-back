@@ -164,3 +164,27 @@ class MascotaQueryAndSerializerTests(TestCase):
         self.assertEqual(response.data['sexo'], 'macho')
         self.assertEqual(response.data['tamano'], 'grande')
         self.assertNotIn('ip_origen', response.data)
+
+
+class MascotaChoicesTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_choices_endpoint_returns_mascota_catalogs(self):
+        response = self.client.get('/api/choices/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            set(response.data.keys()),
+            {'estado', 'tipo_animal', 'sexo', 'tamano'},
+        )
+        for key in ('estado', 'tipo_animal', 'sexo', 'tamano'):
+            self.assertIsInstance(response.data[key], list)
+            self.assertGreater(len(response.data[key]), 0)
+            for option in response.data[key]:
+                self.assertEqual(set(option.keys()), {'value', 'label'})
+
+        self.assertEqual(
+            [option['value'] for option in response.data['estado']],
+            ['perdida', 'encontrada', 'en_adopcion', 'adoptada'],
+        )

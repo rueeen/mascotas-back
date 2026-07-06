@@ -1,5 +1,5 @@
 from rest_framework import status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -54,6 +54,21 @@ class MascotaViewSet(viewsets.ModelViewSet):
         ip = self._get_client_ip(request)
         serializer.save(mascota=mascota, ip_origen=ip)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+def _to_options(choices_class):
+    return [{'value': value, 'label': label} for value, label in choices_class.choices]
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def choices_view(request):
+    return Response({
+        'estado': _to_options(Mascota.Estado),
+        'tipo_animal': _to_options(Mascota.TipoAnimal),
+        'sexo': _to_options(Mascota.Sexo),
+        'tamano': _to_options(Mascota.Tamano),
+    })
 
 
 class ComentarioViewSet(viewsets.ModelViewSet):
