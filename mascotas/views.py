@@ -19,21 +19,6 @@ class MascotaViewSet(viewsets.ModelViewSet):
             return MascotaListSerializer
         return MascotaSerializer
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        estado = self.request.query_params.get('estado')
-        tipo_animal = self.request.query_params.get('tipo_animal')
-        search = self.request.query_params.get('search')
-
-        if estado:
-            queryset = queryset.filter(estado=estado)
-        if tipo_animal:
-            queryset = queryset.filter(tipo_animal=tipo_animal)
-        if search:
-            queryset = queryset.filter(nombre__icontains=search)
-
-        return queryset
-
     def perform_create(self, serializer):
         ip = self._get_client_ip(self.request)
         serializer.save(ip_origen=ip)
@@ -76,15 +61,6 @@ class ComentarioViewSet(viewsets.ModelViewSet):
     queryset = Comentario.objects.select_related('mascota').all()
     serializer_class = ComentarioSerializer
     permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        mascota_id = self.request.query_params.get('mascota')
-
-        if mascota_id:
-            queryset = queryset.filter(mascota_id=mascota_id)
-
-        return queryset
 
     def perform_create(self, serializer):
         ip = MascotaViewSet._get_client_ip(self.request)

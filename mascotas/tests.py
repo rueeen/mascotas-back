@@ -85,19 +85,19 @@ class MascotaQueryAndSerializerTests(TestCase):
             ip_origen='198.51.100.21',
         )
 
-    def test_list_filters_by_tipo_animal_and_hides_origin_ip(self):
-        response = self.client.get('/api/mascotas/', {'tipo_animal': 'gato'})
+    def test_list_returns_all_mascotas_and_hides_origin_ip(self):
+        response = self.client.get('/api/mascotas/')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        results = response.data['results'] if 'results' in response.data else response.data
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]['nombre'], 'Michi')
-        self.assertEqual(results[0]['tipo_animal'], 'gato')
-        self.assertEqual(results[0]['edad'], 2)
-        self.assertEqual(results[0]['raza'], 'Mestizo')
-        self.assertEqual(results[0]['sexo'], 'hembra')
-        self.assertEqual(results[0]['tamano'], 'pequeno')
-        self.assertNotIn('ip_origen', results[0])
+        results = response.data['results'] if isinstance(response.data, dict) and 'results' in response.data else response.data
+        self.assertEqual(len(results), 2)
+        michi = next(result for result in results if result['nombre'] == 'Michi')
+        self.assertEqual(michi['tipo_animal'], 'gato')
+        self.assertEqual(michi['edad'], 2)
+        self.assertEqual(michi['raza'], 'Mestizo')
+        self.assertEqual(michi['sexo'], 'hembra')
+        self.assertEqual(michi['tamano'], 'pequeno')
+        self.assertNotIn('ip_origen', michi)
 
     @staticmethod
     def _test_image(name='mascota.gif'):
