@@ -12,6 +12,7 @@ class MascotaViewSet(viewsets.ModelViewSet):
     queryset = Mascota.objects.prefetch_related('comentarios').all()
     permission_classes = [AllowAny]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+    pagination_class = None
 
     def get_serializer_class(self):
         if self.action == 'list':
